@@ -47,7 +47,7 @@ DoublePrecisionPocAudioProcessor::DoublePrecisionPocAudioProcessor()
 
     // create synths
     pFloatSynth = make_unique<audio_processing_float::SineWaveSynthesiser>(pMTL);
-    //pDoubleSynth = make_unique<audio_processing_double::SineWaveSynthesiser>(pMTL);
+    pDoubleSynth = make_unique<audio_processing_double::SineWaveSynthesiser>(pMTL);
 }
 
 DoublePrecisionPocAudioProcessor::~DoublePrecisionPocAudioProcessor()
@@ -164,12 +164,17 @@ void DoublePrecisionPocAudioProcessor::processBlock(
     juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    const auto totalNumOutputChannels = getTotalNumOutputChannels();
 
     precisionText = singlePrecisionText;
     //pMTL->debug("Rendering in single-precision mode...");
 
-    pFloatSynth->renderNextBlock(buffer, 0, buffer.getNumSamples());
+    // check for bypass
+    if ( !getBypassParameter() ) {
+
+        const auto totalNumOutputChannels = getTotalNumOutputChannels();
+
+        pFloatSynth->renderNextBlock(buffer, 0, buffer.getNumSamples());
+    }
 }
 
 // Double-size render:
@@ -178,12 +183,17 @@ void DoublePrecisionPocAudioProcessor::processBlock(
     juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    const auto totalNumOutputChannels = getTotalNumOutputChannels();
 
     precisionText = doublePrecisionText;
     //pMTL->debug("Rendering in double-precision mode...");
 
-    //pDoubleSynth->renderNextBlock(buffer, 0, buffer.getNumSamples());
+    // check for bypass
+    if ( !getBypassParameter() ) {
+
+        const auto totalNumOutputChannels = getTotalNumOutputChannels();
+
+        pDoubleSynth->renderNextBlock(buffer, 0, buffer.getNumSamples());
+    }
 }
 
 //==============================================================================

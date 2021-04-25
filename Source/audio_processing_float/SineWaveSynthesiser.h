@@ -38,7 +38,7 @@ public:
         // just play one note, forever
         frequency = 440.0;
         currentRadians = 0.0;
-        level = 0.25;
+        level = 0.1;
         
         double cyclesPerSample = frequency / sampleRate;
         radiansDelta = cyclesPerSample * juce::MathConstants<double>::twoPi;

@@ -14,7 +14,7 @@
 #include "juce_igutil/Profiler.h"
 
 #include "audio_processing_float/SineWaveSynthesiser.h"
-//#include "audio_processing_double/SineWaveSynthesiser.h"
+#include "audio_processing_double/SineWaveSynthesiser.h"
 
 //==============================================================================
 /**
@@ -74,7 +74,7 @@ private:
 
     // The synths - one per processing type.  
     std::unique_ptr<audio_processing_float::SineWaveSynthesiser> pFloatSynth;
-    //std::unique_ptr<audio_processing_double::SineWaveSynthesiser> pDoubleSynth;
+    std::unique_ptr<audio_processing_double::SineWaveSynthesiser> pDoubleSynth;
 
     // set in the processBlock() functions, read by editor.
     juce::String & precisionText;
