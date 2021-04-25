@@ -60,6 +60,11 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    const juce::String & getPrecisionText() const 
+    { 
+        return precisionText; 
+    }
+
 private:
 
     // profiler and logger objects
@@ -70,6 +75,9 @@ private:
     // The synths - one per processing type.  
     std::unique_ptr<audio_processing_float::SineWaveSynthesiser> pFloatSynth;
     //std::unique_ptr<audio_processing_double::SineWaveSynthesiser> pDoubleSynth;
+
+    // set in the processBlock() functions, read by editor.
+    juce::String & precisionText;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DoublePrecisionPocAudioProcessor)
 };

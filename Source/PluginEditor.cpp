@@ -9,6 +9,8 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+using namespace juce;
+
 //==============================================================================
 DoublePrecisionPocAudioProcessorEditor::DoublePrecisionPocAudioProcessorEditor (DoublePrecisionPocAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
@@ -16,10 +18,18 @@ DoublePrecisionPocAudioProcessorEditor::DoublePrecisionPocAudioProcessorEditor (
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     setSize (400, 300);
+
+    // Let it run a bit and then get the precision to display.
+    Timer::callAfterDelay(500, [this]() {
+        precisionText = 
+            String("Current audio-processing precision is:  ") + 
+            audioProcessor.getPrecisionText();
+    });
 }
 
 DoublePrecisionPocAudioProcessorEditor::~DoublePrecisionPocAudioProcessorEditor()
-{
+{ 
+    // empty
 }
 
 //==============================================================================
@@ -30,7 +40,7 @@ void DoublePrecisionPocAudioProcessorEditor::paint (juce::Graphics& g)
 
     g.setColour (juce::Colours::white);
     g.setFont (15.0f);
-    g.drawFittedText ("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
+    g.drawFittedText(precisionText, getLocalBounds(), juce::Justification::centred, 1);
 }
 
 void DoublePrecisionPocAudioProcessorEditor::resized()

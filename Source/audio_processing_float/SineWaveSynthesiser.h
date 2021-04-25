@@ -13,8 +13,6 @@
 // This provides the AUDIO_PROCESSING_NAMESPACE name and the SAMPLE_TYPE #defines.
 #include "audio_processing_header.h"
 
-#include "juce_igutil/MTLogger.h"
-
 namespace AUDIO_PROCESSING_NAMESPACE {
 
 /**
@@ -26,10 +24,7 @@ class SineWaveSynthesiser
 public:
     
     // Construct
-    SineWaveSynthesiser(
-        std::shared_ptr<juce_igutil::MTLogger> _pMTL
-    ): 
-        pMTL(_pMTL)
+    SineWaveSynthesiser( std::shared_ptr<juce_igutil::MTLogger> _pMTL )
     {
         // empty
     }
@@ -77,7 +72,6 @@ public:
     // Reset and clean up any resources.
     void releaseResources() 
     {
-        pMTL.reset();
         radiansDelta = 0.0;
     }
 
@@ -87,9 +81,6 @@ private:
     double currentRadians = 0.0;
     double radiansDelta = 0.0;
     float level = 0.0;
-
-    // logger
-    std::shared_ptr<juce_igutil::MTLogger> pMTL;
 };
 
 } // AUDIO_PROCESSING_NAMESPACE

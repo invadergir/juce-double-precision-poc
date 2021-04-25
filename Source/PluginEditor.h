@@ -29,5 +29,7 @@ private:
     // access the processor object that created it.
     DoublePrecisionPocAudioProcessor& audioProcessor;
 
+    juce::String precisionText = "Current audio-processing precision is:  ";
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DoublePrecisionPocAudioProcessorEditor)
 };

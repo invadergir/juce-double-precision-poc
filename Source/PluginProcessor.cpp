@@ -15,6 +15,10 @@ using namespace juce;
 using namespace juce_igutil;
 using namespace std;
 
+juce::String emptyText("");
+juce::String singlePrecisionText("single");
+juce::String doublePrecisionText("double");
+
 //==============================================================================
 DoublePrecisionPocAudioProcessor::DoublePrecisionPocAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -32,7 +36,8 @@ DoublePrecisionPocAudioProcessor::DoublePrecisionPocAudioProcessor()
             "double-precision-poc", 
             "double-precision-poc.txt", 
             "Processor started."))),
-    pMTL(std::make_shared<MTLogger>(pLogger))
+    pMTL(std::make_shared<MTLogger>(pLogger)),
+    precisionText(emptyText)
 #endif
 {
     // set up logger and profiler
@@ -161,6 +166,9 @@ void DoublePrecisionPocAudioProcessor::processBlock(
     juce::ScopedNoDenormals noDenormals;
     const auto totalNumOutputChannels = getTotalNumOutputChannels();
 
+    precisionText = singlePrecisionText;
+    //pMTL->debug("Rendering in single-precision mode...");
+
     pFloatSynth->renderNextBlock(buffer, 0, buffer.getNumSamples());
 }
 
@@ -171,6 +179,9 @@ void DoublePrecisionPocAudioProcessor::processBlock(
 {
     juce::ScopedNoDenormals noDenormals;
     const auto totalNumOutputChannels = getTotalNumOutputChannels();
+
+    precisionText = doublePrecisionText;
+    //pMTL->debug("Rendering in double-precision mode...");
 
     //pDoubleSynth->renderNextBlock(buffer, 0, buffer.getNumSamples());
 }
