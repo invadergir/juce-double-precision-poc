@@ -12,6 +12,12 @@
         <FILE id="c6jD07" name="SineWaveSynthesiser.h" compile="0" resource="0"
               file="Source/audio_processing_float/SineWaveSynthesiser.h"/>
       </GROUP>
+      <GROUP id="{BD65600D-8669-4903-8A14-AF88203ADD38}" name="audio_processing_double">
+        <FILE id="0c13E2" name="audio_processing_header.h" compile="0" resource="0"
+              file="Source/audio_processing_double/audio_processing_header.h"/>
+        <FILE id="67e235" name="SineWaveSynthesiser.h" compile="0" resource="0"
+              file="Source/audio_processing_double/SineWaveSynthesiser.h"/>
+      </GROUP>
       <GROUP id="{3FCA24DB-929F-5C62-EB84-30FCBA05C607}" name="juce_igutil">
         <FILE id="TkjXNg" name="MTLogger.cpp" compile="1" resource="0" file="Source/juce_igutil/MTLogger.cpp"/>
         <FILE id="HA9Iy1" name="MTLogger.h" compile="0" resource="0" file="Source/juce_igutil/MTLogger.h"/>
