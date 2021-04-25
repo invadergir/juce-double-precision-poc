@@ -1,0 +1,14 @@
+Builds/
+JuceLibraryCode/
+
+# just in case
+*.o
+*.obj
+*.exe
+*.vst3
+*.jar
+*.so
+*.dll
+*.lib
+
+
