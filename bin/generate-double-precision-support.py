@@ -179,7 +179,7 @@ def main():
 
         # Parse the options and parameters.
         parser = OptionParser(
-            usage='%prog -j  path/to/*.jucer',
+            usage='%prog -j  path/to/projucer/file.jucer',
             description='This script takes the "Source/audio_processing_float" dir, copies it to "Source/audio_processing_double", and updates the projucer file and headers to easily support double-precision audio buffers.',
             epilog='',
             version='%prog v0.1')
