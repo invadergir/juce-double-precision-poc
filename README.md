@@ -1,6 +1,6 @@
 # Juce Double-Precision POC (Proof of Concept)
 
-This is an example Juce-based application that demonstrates a method for simplifying development by providing code-free 64-bit sample support. 
+This is an example Juce-based application that demonstrates a method for simplifying development by providing code-free double-precision audio fidelity out of single-precision code.
 
 The bulk of audio-processing APIs in Juce rely on templated classes which require concrete types to be set at compile-time.  By applying a little DevOps to the build process, we can easily generate double-precision code from single-precision code, without having to rely on compile-time guarantees.  This makes it easier for developers because they can create code using run-time polymorphism and can sidestep much of the overhead and difficulty of templated code and template interface patterns.  
 
@@ -8,18 +8,21 @@ If the you create code that processes types like `AudioBuffer<SAMPLE_TYPE>` whil
 
 ## Steps to generate double-precision code:
 
-1. Get your code working with all audio-processing code inside of the subfolder 
-for single-precision ("audio_processing_float").  Bring in the provided example `audio_prociessing_header.h` file, and utilize the #define for `SAMPLE_TYPE` where you would specify a `float` or `double` audio sample types (for example in `AudioBuffer` classes).
+1. Get your code working in single-precision mode, following these rules:
+   a. Add all of your audio-processing code inside of the subfolder for single-precision: "`audio_processing_float/`"  Make sure there is a folder "GROUP" in the source listing in the jucer as well.
+   b.  Copy in the provided example "`audio_processing_header.h`" file to the above subdirectory, and utilize the #define in your code for "`SAMPLE_TYPE`" where you would specify "`float`" or "`double`" audio sample types (for example use "`AudioBuffer<SAMPLE_TYPE>`" instead of "`AudioBuffer<float>`", etc).
+   c.  Add every class in that folder into the namespace "`AUDIO_PROCESSING_NAMESPACE`" so that when the code generator runs, it's easy to distinguish between the two versions with the same name.
+   d.  Be sure NOT to include the "`audio_processing_header.h`" file anywhere but inside its own subdirectory (or below that directory).
 2. Exit the IDE and Projucer.
-3. Run this script to populate the double-precision directory.  It does the following:
-    1. Copy all the files from "audio_processing_float" to "audio_processing_double"
-    2. Edit the file audio_processing_double/audio_processing_header.h to:
+3. Run [this script](bin/generate-double-precision-support.py) to populate the double-precision directory.  It does the following:
+   a. Copy all the files from "audio_processing_float" to "audio_processing_double"
+   b. Edit the file audio_processing_double/audio_processing_header.h to:
        * Update #define for `SAMPLE_TYPE` to be `double`
        * Update #define for `AUDIO_PROCESSING_NAMESPACE` to be `double`
        * Change the header guard appropriately.
-    3. Edit your `*.jucer` file to add the new files (it removes all existing from that dir first).
+   c. Edit your "`*.jucer`" file to add the new files (it removes all existing from that dir first).
        * Find the GROUP named "audio_processing_double", delete it
-       * Find the GROUP named "audio_processing_float", copy it to "audio_processing_float".
+       * Find the GROUP named "audio_processing_float", copy it to "audio_processing_double".
        * Change the GROUP id to be a different UUID
        * Change the FILE ids to be new unique IDs.  (random 6-char [a-zA-Z0-9]{6} sequence, check by grepping the file again, if found, re-randomize)
        * Fix the paths to the files to be `Source/audio_processing_double/......`
