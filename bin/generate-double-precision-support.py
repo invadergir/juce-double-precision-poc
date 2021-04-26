@@ -178,8 +178,9 @@ def main():
             sys.exit(1)
 
         # Parse the options and parameters.
+        mainUsage = '%prog -j ' + os.path.join("path", "to", "projucer", "file.jucer")
         parser = OptionParser(
-            usage='%prog -j  path/to/projucer/file.jucer',
+            usage=mainUsage,
             description='This script takes the "Source/audio_processing_float" dir, copies it to "Source/audio_processing_double", and updates the projucer file and headers to easily support double-precision audio buffers.',
             epilog='',
             version='%prog v0.1')
@@ -201,8 +202,8 @@ def main():
         thisScriptDir = os.path.dirname(thisScriptAbs)
         # the root of the source dir.  This script is in the 'bin' dir, off the root level.
         baseDir = os.path.dirname(thisScriptDir)
-        singlePrecisionDir = baseDir + "/Source/audio_processing_float"
-        doublePrecisionDir = baseDir + "/Source/audio_processing_double"
+        singlePrecisionDir = os.path.join(baseDir, "Source", "audio_processing_float")
+        doublePrecisionDir = os.path.join(baseDir, "Source", "audio_processing_double")
 
         # These are abstracted out so later we can add params in case we want to develop 
         # the double precision first, and copy it to single:
@@ -211,7 +212,7 @@ def main():
         destPrecisionDir = doublePrecisionDir
         sourcePrecisionTypename = "float"
         destPrecisionTypename = "double"
-        headerFile = destPrecisionDir + "/" + "audio_processing_header.h"
+        headerFile = os.path.join(destPrecisionDir, "audio_processing_header.h")
         jucerFile = os.path.abspath(options.jucerFile)
 
         print("\nUsing:")
@@ -228,7 +229,8 @@ def main():
             error("could not find specified .jucer file:  "+jucerFile)
 
         # a. remove all files in the dest dir, and copy the source dir to dest dir
-        shutil.rmtree(destPrecisionDir)
+        if os.path.isdir(destPrecisionDir): 
+            shutil.rmtree(destPrecisionDir)
         shutil.copytree(sourcePrecisionDir, destPrecisionDir)
 
         #b. Edit the file audio_processing_double/audio_processing_header.h to:
@@ -239,7 +241,7 @@ def main():
 
         # make sure it exists
         if not os.path.isfile(headerFile): 
-            error("couldn't find input header file: " + sourcePrecisionDir + "/" + headerFile ) # error out with the source because it was just copied from here
+            error("couldn't find input header file: " + os.path.join(sourcePrecisionDir, headerFile) ) # error out with the source because it was just copied from here
 
         # replace all (ie. float -> double or vice versa)
         with fileinput.FileInput(headerFile, inplace=True, backup='.bak') as file:
@@ -283,7 +285,7 @@ def main():
             file.writelines(finalLines)
 
         #    * Delete the "Builds" directory (works on Windows; not sure about MacOS/Linux/etc)
-        buildsDir = baseDir + "/Builds"
+        buildsDir = os.path.join(baseDir, "Builds")
         if os.path.isdir(buildsDir):
             shutil.rmtree(buildsDir)
 

@@ -12,10 +12,10 @@
         <FILE id="c6jD07" name="SineWaveSynthesiser.h" compile="0" resource="0"
               file="Source/audio_processing_float/SineWaveSynthesiser.h"/>
       </GROUP>
-      <GROUP id="{BD65600D-8669-4903-8A14-AF88203ADD38}" name="audio_processing_double">
-        <FILE id="0c13E2" name="audio_processing_header.h" compile="0" resource="0"
+      <GROUP id="551761A8-AA73-4102-BB8F-DCEDFCE97548}" name="audio_processing_double">
+        <FILE id="CmjnMQ" name="audio_processing_header.h" compile="0" resource="0"
               file="Source/audio_processing_double/audio_processing_header.h"/>
-        <FILE id="67e235" name="SineWaveSynthesiser.h" compile="0" resource="0"
+        <FILE id="Rch8dA" name="SineWaveSynthesiser.h" compile="0" resource="0"
               file="Source/audio_processing_double/SineWaveSynthesiser.h"/>
       </GROUP>
       <GROUP id="{3FCA24DB-929F-5C62-EB84-30FCBA05C607}" name="juce_igutil">
