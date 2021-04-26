@@ -6,17 +6,17 @@
               cppLanguageStandard="17">
   <MAINGROUP id="omCJ3a" name="juce-double-precision-poc">
     <GROUP id="{C1305898-6278-40BE-C4FE-0820697C3960}" name="Source">
+      <GROUP id="9EBCF0C9-8645-43AB-AB98-73EA6F5DFB69}" name="audio_processing_double">
+        <FILE id="TAb7RR" name="audio_processing_header.h" compile="0" resource="0"
+              file="Source/audio_processing_double/audio_processing_header.h"/>
+        <FILE id="4f8VMX" name="SineWaveSynthesiser.h" compile="0" resource="0"
+              file="Source/audio_processing_double/SineWaveSynthesiser.h"/>
+      </GROUP>
       <GROUP id="{36EF1ED9-6BF5-7CF5-D010-499E58A92790}" name="audio_processing_float">
         <FILE id="C9hZll" name="audio_processing_header.h" compile="0" resource="0"
               file="Source/audio_processing_float/audio_processing_header.h"/>
         <FILE id="c6jD07" name="SineWaveSynthesiser.h" compile="0" resource="0"
               file="Source/audio_processing_float/SineWaveSynthesiser.h"/>
-      </GROUP>
-      <GROUP id="551761A8-AA73-4102-BB8F-DCEDFCE97548}" name="audio_processing_double">
-        <FILE id="CmjnMQ" name="audio_processing_header.h" compile="0" resource="0"
-              file="Source/audio_processing_double/audio_processing_header.h"/>
-        <FILE id="Rch8dA" name="SineWaveSynthesiser.h" compile="0" resource="0"
-              file="Source/audio_processing_double/SineWaveSynthesiser.h"/>
       </GROUP>
       <GROUP id="{3FCA24DB-929F-5C62-EB84-30FCBA05C607}" name="juce_igutil">
         <FILE id="TkjXNg" name="MTLogger.cpp" compile="1" resource="0" file="Source/juce_igutil/MTLogger.cpp"/>
