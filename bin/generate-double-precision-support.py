@@ -87,6 +87,7 @@ def getAndFixupSourceGroup(inLines, sourceGroupName, destGroupName):
     openRegex = re.compile('.*<GROUP .*name="'+sourceGroupName+'">')
     closeRegex = re.compile('.*</GROUP>')
 
+    # extract the source group
     for l in inLines:
         if state == State.NOT_FOUND:
             matchObj = openRegex.match(l)
@@ -100,7 +101,8 @@ def getAndFixupSourceGroup(inLines, sourceGroupName, destGroupName):
                 state = State.OUT_OF_GROUP
                 break
 
-    # now update all the lines
+    # now update all the lines in that group to be for the destination
+    checkLines = inLines.copy()
     upLines = []
     sourceRE = re.compile('.*('+sourceGroupName+').*')
     destUuidRE = re.compile(' *<GROUP id="(\{[0-9a-zA-Z\-]+)\}" name="'+destGroupName+'">')
@@ -120,10 +122,21 @@ def getAndFixupSourceGroup(inLines, sourceGroupName, destGroupName):
         # change file id to be new unique id
         matchObj = fileIdRE.search(l)
         if matchObj:
-            newId = generateRandomCharAndDigitSequence(6)
-            l = re.sub(matchObj.group(1), newId, l, count=1)
+            isUnique = False
+            while not isUnique:
+                newId = generateRandomCharAndDigitSequence(6)
+                idRE = re.compile('.*<FILE *id="'+newId+'"')
+                for cl in checkLines:
+                    match = idRE.search(cl)
+                    if match:
+                        break
 
-        upLines.append(l)
+                # if we got here there was no match, it's ok to use the id
+                isUnique = True
+                l = re.sub(matchObj.group(1), newId, l, count=1)
+
+        upLines.append(l) 
+        checkLines.append(l) # this ends up being the original lines plus any modified lines - important for checking for id uniqueness
 
     return upLines
 
