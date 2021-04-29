@@ -2,7 +2,7 @@
 
 ## Abstract
 
-This is an example Juce-based application that demonstrates a method for implementing a double-precision audio processing algorithm automatically from single-precision code.  By employing some "DevOps" and simple preprocessing directives, we can avoid templating and thereby increase speed of development and maintainability of the code, reducing development cost and time to market and at the same time increasing run-time flexibility.
+This is an example Juce-based application that demonstrates a method for implementing a double-precision audio processing algorithm automatically from single-precision code.  By employing some DevOps and simple preprocessing directives, we can avoid templating and thereby increase speed of development and maintainability of the code, reducing development cost and time to market and at the same time increasing run-time flexibility.
 
 ## Problem
 
@@ -89,4 +89,4 @@ Alternatives to this procedure that would give similar results:
 
 Overall, I feel the benefits to developer productivity and code maintainability outweigh the stated drawbacks, unless you have a large code base already.  A large codebase with many modules and libraries will need to have the build procedures carefully thought out before implementing a process like this.
 
-However, since this does incur a slight development cost to run the script and follow the rules, it is worth profiling the alternative option mentioned above before implementing this procedure.  The extra memory and processing may be acceptable, and that is the lowest-impact solution.
+However, since this does incur a slight development cost to run the script and follow the rules, it is worth profiling alternative option #1 (above) before implementing this procedure.  The extra memory and processing may be acceptable, and that is the lowest-impact solution.
