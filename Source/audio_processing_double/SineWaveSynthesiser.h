@@ -13,6 +13,8 @@
 // This provides the AUDIO_PROCESSING_NAMESPACE name and the SAMPLE_TYPE #defines.
 #include "audio_processing_header.h"
 
+#define TWOPI (juce::MathConstants<SAMPLE_TYPE>::twoPi)
+
 namespace AUDIO_PROCESSING_NAMESPACE {
 
 /**
@@ -40,8 +42,8 @@ public:
         currentRadians = 0.0;
         level = 0.1;
         
-        double cyclesPerSample = frequency / sampleRate;
-        radiansDelta = cyclesPerSample * juce::MathConstants<double>::twoPi;
+        SAMPLE_TYPE cyclesPerSample = frequency / sampleRate;
+        radiansDelta = cyclesPerSample * TWOPI;
     }
 
     /**
@@ -53,17 +55,21 @@ public:
         int startSample, 
         int numSamples) 
     {
+        const static SAMPLE_TYPE TWO = static_cast<SAMPLE_TYPE>(2.0);
         if (radiansDelta > 0.0)
         {
             while (--numSamples >= 0)
             {
-                SAMPLE_TYPE currentSample = 
-                    static_cast<SAMPLE_TYPE>( std::sin(currentRadians) ) * level;
+                SAMPLE_TYPE currentSample = ( 
+                    static_cast<SAMPLE_TYPE>( std::sin(currentRadians) ) + 
+                    static_cast<SAMPLE_TYPE>( std::sin(currentRadians * TWO) ) 
+                ) * level;
 
-                for (auto i = outputBuffer.getNumChannels(); --i >= 0;)
-                    outputBuffer.addSample (i, startSample, currentSample);
+                for (int chan = 0; chan < outputBuffer.getNumChannels(); ++chan)
+                    outputBuffer.addSample (chan, startSample, currentSample);
 
                 currentRadians += radiansDelta;
+                if (currentRadians > TWOPI) currentRadians -= TWOPI;
                 ++startSample;
             }
         }
@@ -77,11 +83,10 @@ public:
 
 private:
 
-    float frequency = 0.0;
-    double currentRadians = 0.0;
-    double radiansDelta = 0.0;
-    float level = 0.0;
+    SAMPLE_TYPE frequency = 0.0;
+    SAMPLE_TYPE currentRadians = 0.0;
+    SAMPLE_TYPE radiansDelta = 0.0;
+    SAMPLE_TYPE level = 0.0;
 };
 
 } // AUDIO_PROCESSING_NAMESPACE
-

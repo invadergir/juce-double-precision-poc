@@ -76,6 +76,10 @@ private:
     std::unique_ptr<audio_processing_float::SineWaveSynthesiser> pFloatSynth;
     std::unique_ptr<audio_processing_double::SineWaveSynthesiser> pDoubleSynth;
 
+    // Buffer for testing performance with the "copy float to double buffer" 
+    // scenario.
+    std::unique_ptr<juce::AudioBuffer<double>> pDoubleBuffer;
+
     // set in the processBlock() functions, read by editor.
     juce::String & precisionText;
 

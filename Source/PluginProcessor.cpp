@@ -19,6 +19,14 @@ juce::String emptyText("");
 juce::String singlePrecisionText("single");
 juce::String doublePrecisionText("double");
 
+// Uncomment one or both of these to get special behavior for profiling tests:
+
+// Copy to double buffer, process in double, copy back to single buffer:
+//#define PROFILING_SINGLE_TO_DOUBLE
+
+// Define this to disable rendering during above test, to measure effect of the buffer copying.
+//#define DISABLE_RENDER
+
 //==============================================================================
 DoublePrecisionPocAudioProcessor::DoublePrecisionPocAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -33,8 +41,8 @@ DoublePrecisionPocAudioProcessor::DoublePrecisionPocAudioProcessor()
 
     pLogger(std::shared_ptr<juce::FileLogger>(
         FileLogger::createDefaultAppLogger(
-            "double-precision-poc", 
-            "double-precision-poc.txt", 
+            "juce-double-precision-poc", 
+            "juce-double-precision-poc.txt", 
             "Processor started."))),
     pMTL(std::make_shared<MTLogger>(pLogger)),
     precisionText(emptyText)
@@ -43,11 +51,15 @@ DoublePrecisionPocAudioProcessor::DoublePrecisionPocAudioProcessor()
     // set up logger and profiler
     Logger::setCurrentLogger(pLogger.get());
     pLogger->logMessage("Audio Processor CONSTRUCTOR.");
-    pProfiler.reset(new Profiler("DoublePrecisionPocAudioProcessor_Profiler", pMTL, 1000));
+    const int numWarmupCycles = 2000;
+    pProfiler.reset(new Profiler(
+        "DoublePrecisionPocAudioProcessor_Profiler", pMTL, numWarmupCycles, 500));
 
     // create synths
     pFloatSynth = make_unique<audio_processing_float::SineWaveSynthesiser>(pMTL);
     pDoubleSynth = make_unique<audio_processing_double::SineWaveSynthesiser>(pMTL);
+
+    pLogger->logMessage("Constructor done.");
 }
 
 DoublePrecisionPocAudioProcessor::~DoublePrecisionPocAudioProcessor()
@@ -121,7 +133,19 @@ void DoublePrecisionPocAudioProcessor::changeProgramName (int index, const juce:
 void DoublePrecisionPocAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     pFloatSynth->prepare(sampleRate);
-    //pDoubleSynth->prepare(sampleRate);
+    pDoubleSynth->prepare(sampleRate);
+
+    const int numChannels = getTotalNumOutputChannels();
+    const int numSamples = samplesPerBlock * 2;
+
+    if ( !pDoubleBuffer ) {
+        pMTL->debug(String("PREPARE:  allocating double buffer, using twice the requested size to make sure we have enough:  numSamples = ") + String(numSamples));
+        pDoubleBuffer.reset(new AudioBuffer<double>(numChannels, numSamples));
+    }
+    else {
+        pMTL->debug(String("PREPARE:  RESIZING double buffer, using twice the requested size to make sure we have enough:  numSamples = ") + String(numSamples));
+        pDoubleBuffer->setSize(numChannels, numSamples, true, false, true);
+    }
 }
 
 void DoublePrecisionPocAudioProcessor::releaseResources()
@@ -129,7 +153,7 @@ void DoublePrecisionPocAudioProcessor::releaseResources()
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
     pFloatSynth->releaseResources();
-    //pDoubleSynth->releaseResources();
+    pDoubleSynth->releaseResources();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -166,18 +190,41 @@ void DoublePrecisionPocAudioProcessor::processBlock(
     juce::ScopedNoDenormals noDenormals;
 
     precisionText = singlePrecisionText;
-    //pMTL->debug("Rendering in single-precision mode...");
+
+    static bool gotHere = false;
+    if ( !gotHere ) {
+        pMTL->debug("Rendering in single-precision mode...");
+        gotHere = true;
+    }
 
     // check for bypass
     if ( !getBypassParameter() ) {
+        //pProfiler->start();
 
-        const auto totalNumOutputChannels = getTotalNumOutputChannels();
+        const auto numChannel = getTotalNumOutputChannels();
 
+#ifdef PROFILING_SINGLE_TO_DOUBLE
+        // copy to double buffer, process in double, copy back to single buffer
+        // Copy.  Note makeCopyOf does a setSize() already.  
+        pDoubleBuffer->makeCopyOf(buffer, true);
+
+        // render - can be disabled to specifically test effect of copying:
+        #ifndef DISABLE_RENDER
+        pDoubleSynth->renderNextBlock(*pDoubleBuffer, 0, buffer.getNumSamples());
+        #endif
+
+        // copy back to single buffer
+        buffer.makeCopyOf(*pDoubleBuffer, true);
+
+#else // normal
         pFloatSynth->renderNextBlock(buffer, 0, buffer.getNumSamples());
+#endif
+
+        //pProfiler->stop();
     }
 }
 
-// Double-size render:
+// Double-size render.  I don't have a VST host that can run & test this.
 void DoublePrecisionPocAudioProcessor::processBlock(
     juce::AudioBuffer<double> & buffer, 
     juce::MidiBuffer& midiMessages)
@@ -185,14 +232,22 @@ void DoublePrecisionPocAudioProcessor::processBlock(
     juce::ScopedNoDenormals noDenormals;
 
     precisionText = doublePrecisionText;
-    //pMTL->debug("Rendering in double-precision mode...");
+
+    static bool gotHere = false;
+    if ( !gotHere ) {
+        pMTL->debug("Rendering in double-precision mode...");
+        gotHere = true;
+    }
 
     // check for bypass
     if ( !getBypassParameter() ) {
+        pProfiler->start();
 
-        const auto totalNumOutputChannels = getTotalNumOutputChannels();
+        const auto numChannels = getTotalNumOutputChannels();
 
         pDoubleSynth->renderNextBlock(buffer, 0, buffer.getNumSamples());
+
+        pProfiler->stop();
     }
 }
 
