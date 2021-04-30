@@ -2,7 +2,7 @@
 
 ## Abstract
 
-This example Juce application demonstrates two successful techniques for simplifying software engineering in the Juce environment by removing the need for templatized class types in the code. The first method generates double-precision audio processing code automatically from single-precision code.  For apps targeting very performance-constrained devices (such as mobile), it would be appropriate to apply this build process to make development easier at the cost of a small amount of process overhead.  For apps targeting higher performance devices (desktop/laptop), it is instead recommended to implement the second technique, using double precision processing but converting lower-precision buffers prior to and after processing, which gave acceptable performance.
+This example Juce application demonstrates two successful techniques for simplifying software engineering in the Juce environment by removing the need for templatized class types in the code. The first method generates double-precision audio processing code automatically from single-precision code.  For apps targeting very performance-constrained devices (such as mobile), it would be appropriate to apply this build process to make development easier at the cost of some amount of process overhead.  For apps targeting only higher-performance devices (desktop or laptop), it is instead recommended to implement the second technique, using double precision processing but converting lower-precision buffers prior to and after processing, which gave acceptable performance.
 
 In both cases, the described methodology avoids templating and thereby increases speed of development and maintainability of the code, reducing development cost and time to market and at the same time increasing run-time flexibility.
 
@@ -10,7 +10,7 @@ In both cases, the described methodology avoids templating and thereby increases
 
 The bulk of audio-processing APIs in Juce rely on code that deals with "`AudioBuffer<T>`" type, whose template type is typically "`float`" (single-precision) or "`double`" (double-precision).  Different audio host software or standalone implementations may use one or the other precision, so Juce-based code has to support both.  To avoid duplicating code, the software developer usually templatizes their classes and incurs the "template penalty" during development:  higher difficulty during development, testing, and maintenance of this code.  (The problem occurs because C++ does not allow virtual member functions to use templatized parameters; it is only allowed in templated classes.)  There is a need for a way to avoid the template interface patterns required inside this environment and to use object-oriented software designs that are easier to develop and maintain.
 
-The other benefit of object-oriented software designs is that they provide runtime flexibility where templatized code is much less so.  For example, consider the case of having effect processors that could be ordered in any way the user wishes.  It is very difficult and maybe prohibitively memory-exensive to implement this with templates using "`juce::dsp`"-based effect processors and "`juce::dsp::ProcessorChain`"; all of the possible effect combinations would have to be declared and instantiated at compile time and activated based on the user's choices.  With standard object-oriented techniques this is comparatively trivial, where effect processing objects can be slotted into place very easily in any order the user wishes.
+The other benefit of object-oriented software designs is that they provide runtime flexibility where templatized code is much less so.  For example, consider the case of having effect processors that could be ordered in any way the user wishes.  It is very difficult and maybe prohibitively memory-exensive to implement this with templates using "`juce::dsp`"-based effect processors and "`juce::dsp::ProcessorChain`"; all of the possible effect combinations would have to be declared and instantiated at compile time and activated at run time based on the user's choices.  With standard object-oriented techniques this is comparatively trivial, since effect processing objects can be slotted into place very easily in any order requested.
 
 ## Hypothesis
 
@@ -54,9 +54,9 @@ Provided the above requirements are met, it's easy to generate the double precis
 
 ### Performance Testing Procedure
 
-Note that the performance difference between the script-generated code and a templatized version of the same code was not performed.  We can assume that the performance would be exactly the same, since for templates, the compiler creates multiple distinct class types based on each given template type; and this is exactly what I have done, in a different way outside of the compiler.
+Note that the performance difference between the script-generated code and a templatized version of the same code was not performed.  We can safely assume that the performance would be exactly the same, since for templates, the compiler creates multiple distinct class types based on each given template type; and this is exactly what I have done, in a different way.
 
-Performance of each of the two scenarios was measured using my Profiler and multi-threaded logging (MTLogger) classes.  3 runs of 10,000 samples each will be averaged for the final result.  
+Performance of each of the two scenarios was measured using my Profiler and multi-threaded logging (MTLogger) classes.  3 runs of 10,000 samples each was averaged for the final result.  
 
 I ensured all processing uses SAMPLE_TYPE, set 100% minimum processor state in Windows' Power Options, and used this profiler config: 
 
@@ -71,7 +71,7 @@ Scenario 1, script-generated double-precision code performance results:
 1. Perf Stats:  minNanos=12'200, maxNanos=142'400, nanosAvg=39'115, totalSamples=10'000
 2. Perf Stats:  minNanos=12'200, maxNanos=183'700, nanosAvg=39'038, totalSamples=10'000
 3. Perf Stats:  minNanos=13'800, maxNanos=176'300, nanosAvg=41'304, totalSamples=10'000
-AVGS:                    12'733           167'467           39'819               10'000
+AVERAGES:                12'733           167'467           39'819               10'000
 ```
 
 Scenario 2, single precision processBlock() modified to copy the float AudioBuffer to a double buffer and process the audio with double-precision code:
@@ -80,7 +80,7 @@ Scenario 2, single precision processBlock() modified to copy the float AudioBuff
 1. Perf Stats:  minNanos=14'700, maxNanos=122'100, nanosAvg=45'889, totalSamples=10'000
 2. Perf Stats:  minNanos=14'300, maxNanos=140'600, nanosAvg=42'122, totalSamples=10'000
 3. Perf Stats:  minNanos=14'300, maxNanos=126'100, nanosAvg=44'323, totalSamples=10'000
-AVGS:                    14'433           129'600           44'111               10'000
+AVERAGES:                14'433           129'600           44'111               10'000
                                                            (+4'292 nanoseconds)
                                                            (+4.3 microseconds)
 ```
@@ -96,13 +96,15 @@ AVGS:                    1'433           73'300           4'537               10
 
 The performance results show that there is about a 4.5 microsecond penalty for copying single-precision audio into a double-precision buffer and back.
 
-It is interesting to note that in the example synthesiser code, the sine wave generation uses either the `"float"` or `"double"` version of the std::sin() function, and the performance results between the `"float"` or `"double"` versions of the audio processing code, when subtracting the buffer copy penalty, are almost exactly the same (+200 nanoseconds).  So at least on my 5-year old Intel laptop processor, those different-precision functions perform roughly the same.
+It is interesting to note that in the example synthesiser code, the sine wave generation uses either the `"float"` or `"double"` version of the std::sin() function, and the performance results between the `"float"` or `"double"` versions of the audio processing code -- when subtracting the buffer copy penalty -- are almost exactly the same (+200 nanoseconds).  So at least on my 5-year old Intel laptop processor, those different-precision functions perform roughly the same.
+
+I should also note that I tested the python script on both Windows and Linux, and there are no cross-platform issues with any of the file modifications.  On Windows, it deletes the "Builds" directory to ensure that the Projucer reruns the IDE project generation; however it remains to be seen on Linux and Mac how to best handle the build there.  This step might not even be necessary.
 
 ## Discussion
 
 ### Benefits
 
-The main benefit of both approaches is that they enable object-oriented development techniques, simplifying designs.  Although the example audio processing code provided ("`SineWaveSynthesiser.h`") is not particularly object-oriented, its interface includes parameters of type "`AudioBuffer<SAMPLE_TYPE>`", which is now a concrete type that you can use in virtual methods, create an interface around, and implement object-oriented patterns on.  For a good object-oriented example of a synthesiser built using a single-type AudioBuffer, please see [https://github.com/invadergir/midi-synthesiser](https://github.com/invadergir/midi-synthesiser).  It also includes a solution to the arbitrary effect-ordering problem mentioned in the Problem Description.
+The main benefit of both approaches is that they enable object-oriented development techniques, simplifying designs.  Although the example audio processing code provided ("`SineWaveSynthesiser.h`") is not particularly object-oriented, its interface includes parameters of type "`AudioBuffer<SAMPLE_TYPE>`", which is now a concrete type that you can use in virtual methods, create an interface around, and implement object-oriented patterns on.  For a good example of an object-oriented synthesiser design written with only a single-type AudioBuffer, please see [https://github.com/invadergir/midi-synthesiser](https://github.com/invadergir/midi-synthesiser).  That repository also includes a solution to the arbitrary effect-ordering problem mentioned in the Problem Description.
 
 By using O.O. software designs:
 
@@ -119,21 +121,25 @@ There are a few more caveats when using the auto-generated code approach:
 * Before the first run of the script, no calls to double-precision code can be made.  For example, you can't populate the "`AudioBuffer<double>`" version of processBlock() until you generate the double code. (Something to keep in mind.)
 * After running the script, if you continue to develop, you will gather ever-more stale code in the double-precision dir, which will cause compile problems or logic issues.  It was pretty clear that the code-generation method has a bit of a process penalty; while updating some of my code for performance testing, I noticed some discrepancies between the 'float' and 'double' versions of my code (when I forgot to update the other directory), and found myself developing a file-copy workaround instead of running the script every time.  (The script is a major slowdown in development because you have to close and reopen the IDE and Juce.)  Some possible workarounds:
     * One workaround would be to delete that dir again, and add #ifdefs around double code inside the AudioProcessor class.  Once you have your code working again, run the script and disable the ifdef.  Maybe the ifdef could be handled by the script as well.
-    * Another workaround would be to add the script run as a pre-compilation step in the projucer file.  (An option could be added to the script to only run the code-generation step to enable this.)  This would only work in cases where you don't add any new files to the project, but this is a known limitation of Juce development.  If you add files, you have to close your IDE and muck around in the Projucer.  
-        * (Side note: Using this script as a base, it would be easy to create a script to auto-add files to the projucer though.)
+    * Another workaround would be to add the script run as a pre-compilation step in the projucer file.  (An option could be added to the script to only run the code-generation step to enable this.)  This would only work in cases where you don't add any new files to the project, but this is a known limitation of Juce development -- if you add files to the project, you have to close your IDE and muck around in the Projucer.  
+        * (Side note: Using this python script as a starting point, it would be easy to create a script to auto-add files to the projucer.)
 * Shared audio-processing code in other modules or libraries will have to be handled carefully.  It is likely they would need to be converted to use the same namespaces for audio processing, or at least wrapped with code that uses the SAMPLE_TYPE as the concrete floating point type.  More discovery is needed here.
 
 ### Other Considerations
 
-* The parameters in the "`juce::AudioProcessorValueTreeState`" class are all "`float`" (single-precision) values.  This means any controls you have on your effect/instrument won't have the same resolution as the processing code.  This is probably not an issue, though; even assuming some human can hear the difference between 32-bit and 64-bit processed audio, there's no way their fingers can                           distinguish between it while turning a knob or moving a slider.  ;)  It may affect some very precise automation moves, but I can't believe this is much of an issue.
-* Since the editor class is typically separate from the processing code, any samples displayed in any view components will be only a singular precision. This is also probably not a huge issue.
+* The parameters in the "`juce::AudioProcessorValueTreeState`" class are all "`float`" (single-precision) values.  This means any controls you have on your effect/instrument won't have the same resolution as the processing code.  This is probably not an issue, though; even assuming some human can hear the difference between 32-bit and 64-bit processed audio, there's no way their fingers can distinguish between it while turning a knob or moving a slider.  ;)  It may affect some extremely precise automation moves, but I can't believe this is much of an issue.
+* Since the editor class is typically separate from the processing code, any samples displayed in any view components will be only a singular precision. This is also probably not a big issue.
 
 ## Conclusion and Recommendations
 
 Overall, I feel the benefits to developer productivity and code maintainability outweigh the stated drawbacks for either method.  However, since there is a not-insignificant development process hit to using the code-generation method, I recommend starting off a project by writing the double precision audio code with buffer copies to support lower precisions.  Development can be done on a higher-performance computer (desktop or laptop) computer with little concern for the performance impact of the buffer copies.
 
-Then when main development wraps up and your app has been tested successfully on higher-performance hardware, if you plan to target mobile devices and top performance is a legitimate concern, you can remove your buffer-copying code and using the code-generation script to generate the "pure" single-precision code.  (A slight modification to the script would be necessary to support this.)
+Then when main development wraps up and your app has been tested successfully on higher-performance hardware, if you plan to target mobile/ARM devices and the buffer-copying penalty exceeds your requirements, you can remove your buffer-copying code and using the code-generation script to generate the "pure" single-precision code.  (A slight modification to the script would be necessary to support this, to swap the source and destination directories via a program argument.)
 
 By following this procedure, you can maximize the benefit and minimize the drawbacks of both techniques.  It will speed up development by writing object-oriented code, sidestep the process issues on constrained devices while in the thick of development, but later in the project, provide better support for constrained devices using the same code - all the while still avoiding templating.
 
-For existing projects, if you have a large code base already with many Juce modules and libraries, you will need to have your build procedures and target envirments carefully considered before implementing either method.  You would also need to balance the maintenance needs of existing templated software with the ease of use of the methods described here; it may or may not be a worthwhile investment.
+For existing projects, if you have a large code base already with many Juce modules and libraries, you will need to have your build procedures and target environments carefully considered before implementing either method.  You would also need to balance the maintenance needs of existing templated software with the ease of use of the methods described here; it may or may not be a worthwhile investment.
+
+## Further Work
+
+TODO 
