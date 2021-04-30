@@ -47,7 +47,7 @@ public:
     // get elapsed time, store stats, and maybe output to the log based on the modulo
     void stop();
 
-    inline unsigned long long getTotalSamples() { return totalSamples; }
+    inline unsigned long long getTotalSamples() const { return totalSamples; }
 
 private: 
 
