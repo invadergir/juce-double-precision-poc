@@ -142,4 +142,8 @@ For existing projects, if you have a large code base already with many Juce modu
 
 ## Further Work
 
-TODO 
+Some areas for further exploration along these lines:
+
+1. Develop a method for generating code in dynamic/static libraries and Juce modules, and integrating it with Juce applications that also use the code generation technique.
+2. Modify the current python script to have a argument that chooses which code directory is the source and which is the destination (audio_processing_float or audio_processing_double). 
+3. Develop automated workarounds potential issues around developing after the code initial code generation (see above Drawbacks section for more details).
