@@ -10,11 +10,11 @@ In both cases, the described methodology avoids templating and thereby increases
 
 The bulk of audio-processing APIs in Juce rely on code that deals with "`AudioBuffer<T>`" type, whose template type is typically "`float`" (single-precision) or "`double`" (double-precision).  Different audio host software or standalone implementations may use one or the other precision, so Juce-based code has to support both.  To avoid duplicating code, the software developer usually templatizes their classes and incurs the "template penalty" during development:  higher difficulty during development, testing, and maintenance of this code.  (The problem occurs because C++ does not allow virtual member functions to use templatized parameters; it is only allowed in templated classes.)  There is a need for a way to avoid the template interface patterns required inside this environment and to use object-oriented software designs that are easier to develop and maintain.
 
-The other benefit of object-oriented software designs is that they provide runtime flexibility where templatized code is much less so.  For example, consider the case of having effect processors that could be ordered in any way the user wishes.  It is very difficult and maybe prohibitively memory-exensive to implement this with templates using "`juce::dsp`"-based effect processors and "`juce::dsp::ProcessorChain`"; all of the possible effect combinations would have to be declared and instantiated at compile time and activated at run time based on the user's choices.  With standard object-oriented techniques this is comparatively trivial, since effect processing objects can be slotted into place very easily in any order requested.
+The other benefit of object-oriented software designs is that they provide run-time flexibility where templatized code is much less so.  For example, consider the case of having effect processors that could be ordered in any way the user wishes.  It is very difficult and maybe prohibitively memory-expensive to implement this with templates using "`juce::dsp`"-based effect processors and "`juce::dsp::ProcessorChain`"; all of the possible effect combinations would have to be declared and instantiated at compile time and activated at run time based on the user's choices.  With standard object-oriented techniques this is comparatively trivial, since effect processing objects can be slotted into place very easily in any order requested.
 
 ## Hypothesis
 
-By applying a little automation to the build process, we should be able to easily generate double-precision code from single-precision code, writing code only once and avoiding templating.  The only requirements should be that the developer has to run a script to auto-copy code and transform some configuration files for use in double-precision mode.  The script should be cross-platorm like Juce.  The developer should only have to write code once for one precision type (single or double), and the other precision type should be able to be auto-generated via that script.  The build-process modification should be just as fast as templatized code, and the build-process change should compare favorably to the speed of copying low-precision audio buffers before and after double-precision audio processing.
+By applying a little automation to the build process, we should be able to easily generate double-precision code from single-precision code, writing code only once and avoiding templating.  The only requirements should be that the developer has to run a script to auto-copy code and transform some configuration files for use in double-precision mode.  The script should be cross-platform like Juce.  The developer should only have to write code once for one precision type (single or double), and the other precision type should be able to be auto-generated via that script.  The build-process modification should be just as fast as templatized code, and the build-process change should compare favorably to the speed of copying low-precision audio buffers before and after double-precision audio processing.
 
 ## Procedure
 
@@ -24,18 +24,18 @@ To test the hypothesis, I developed a script that can be run to auto-generate co
 
 Organize your single-precision code in the following way:
 
-1. Add all of your audio-processing code inside of the subfolder for single-precision: "`Source/audio_processing_float/`"  Make sure there is a matching folder "GROUP" in the source listing in the projucer file configuration as well.  The easiest way is to add the entire folder directly into the projucer.
-2.  Add a "`audio_processing_header.h`" file to the above subdirectory.
+1. Add all of your audio-processing code inside of the sub-folder for single-precision: "`Source/audio_processing_float/`"  Make sure there is a matching folder "GROUP" in the source listing in the Projucer file configuration as well.  The easiest way is to add the entire folder directly into the Projucer.
+2.  Add a "`audio_processing_header.h`" file to the above sub-directory.
 3.  Utilize the #define for "`SAMPLE_TYPE`" in your code instead of "`float`" or "`double`" audio sample types (for example use "`AudioBuffer<SAMPLE_TYPE>`" instead of "`AudioBuffer<float>`", etc).
 4.  Add every class in that folder into the namespace "`AUDIO_PROCESSING_NAMESPACE`" so that it's easy to distinguish between the two versions with the same name (the script will create a new namespace name to distinguish them).
-5.  Be sure NOT to include the "`audio_processing_header.h`" file anywhere but inside its own subdirectory (or below that directory).
+5.  Be sure NOT to include the "`audio_processing_header.h`" file anywhere but inside its own sub-directory (or below that directory).
 
 ### To Auto-Generate Double Precision Code
 
 Provided the above requirements are met, it's easy to generate the double precision code:
 
 1. Exit your IDE (or close the project), and exit the Projucer if it's running.
-2. Run the script [bin/generate-double-precision-support.py](bin/generate-double-precision-support.py) to populate the double-precision directory.  It assumes the user wishes to copy single-precision to the double-precision dir, but this could be reversed with an argument in the future. (Run example: "`bin/generate-double-precision-support.py -j path/to/projucer/file.jucer`"  It does the following:
+2. Run the script [bin/generate-double-precision-support.py](bin/generate-double-precision-support.py) to populate the double-precision directory.  It assumes the user wishes to copy single-precision to the double-precision directory, but this could be reversed with an argument in the future. (Run example: "`bin/generate-double-precision-support.py -j path/to/projucer/file.jucer`"  It does the following:
     1. Copies all the files from "audio_processing_float" to "audio_processing_double"
     2. Edits the file audio_processing_double/audio_processing_header.h and.  Changes that it makes are:
         * Updates the #define for `SAMPLE_TYPE` to be `double`
@@ -48,8 +48,8 @@ Provided the above requirements are met, it's easy to generate the double precis
         * Changes the FILE ids to be new unique IDs.  (random 6-char [a-zA-Z0-9]{6} sequence (checked for uniqueness)
         * Fixes the paths to the files to be `Source/audio_processing_double/......`
         * Deletes the "Builds" directory (this works on Windows - not sure about MacOS/Linux yet - feedback welcome!)
-4. Open the projucer file and click "Save and Open in IDE"
-5. Edit your AudioProcessor class to call the double-precision audio renderer in the apropriate processBlock() function (requires a method override of the parent class).
+4. Open the Projucer file and click "Save and Open in IDE"
+5. Edit your AudioProcessor class to call the double-precision audio renderer in the appropriate processBlock() function (requires a method override of the parent class).
 6. Viola!  You now support 64-bit audio processing with no code changes!
 
 ### Performance Testing Procedure
@@ -58,9 +58,9 @@ Note that the performance difference between the script-generated code and a tem
 
 Performance of each of the two scenarios was measured using my Profiler and multi-threaded logging (MTLogger) classes.  3 runs of 10,000 samples each was averaged for the final result.  
 
-I ensured all processing uses SAMPLE_TYPE, set 100% minimum processor state in Windows' Power Options, and used this profiler config: 
+I ensured all processing uses SAMPLE_TYPE, set 100% minimum processor state in Windows' Power Options, and used this profiler configuration: 
 
-* 2000 warmup cycles (where stat gathering is disabled)
+* 2000 warm-up cycles (where stat gathering is disabled)
 * 500 logs skipped (10x more than default of 50)
 
 ## Results
@@ -91,7 +91,7 @@ Additionally, I ran a performance test with the processing code commented out to
 1. Perf Stats:  minNanos=1'400, maxNanos=58'600, nanosAvg=4'342, totalSamples=10'000
 2. Perf Stats:  minNanos=1'500, maxNanos=84'800, nanosAvg=4'682, totalSamples=10'000
 3. Perf Stats:  minNanos=1'400, maxNanos=76'500, nanosAvg=4'587, totalSamples=10'000
-AVGS:                    1'433           73'300           4'537               10'000
+AVERAGES:                1'433           73'300           4'537               10'000
 ```
 
 The performance results show that there is about a 4.5 microsecond penalty for copying single-precision audio into a double-precision buffer and back.
@@ -119,10 +119,10 @@ The drawback to the buffer-copying solution are pretty clear:  a 4.5 microsecond
 There are a few more caveats when using the auto-generated code approach:
 
 * Before the first run of the script, no calls to double-precision code can be made.  For example, you can't populate the "`AudioBuffer<double>`" version of processBlock() until you generate the double code. (Something to keep in mind.)
-* After running the script, if you continue to develop, you will gather ever-more stale code in the double-precision dir, which will cause compile problems or logic issues.  It was pretty clear that the code-generation method has a bit of a process penalty; while updating some of my code for performance testing, I noticed some discrepancies between the 'float' and 'double' versions of my code (when I forgot to update the other directory), and found myself developing a file-copy workaround instead of running the script every time.  (The script is a major slowdown in development because you have to close and reopen the IDE and Juce.)  Some possible workarounds:
+* After running the script, if you continue to develop, you will gather ever-more stale code in the double-precision directory, which will cause compile problems or logic issues.  It was pretty clear that the code-generation method has a bit of a process penalty; while updating some of my code for performance testing, I noticed some discrepancies between the 'float' and 'double' versions of my code (when I forgot to update the other directory), and found myself developing a file-copy workaround instead of running the script every time.  (The script is a major slowdown in development because you have to close and reopen the IDE and Juce.)  Some possible workarounds:
     * One workaround would be to delete that dir again, and add #ifdefs around double code inside the AudioProcessor class.  Once you have your code working again, run the script and disable the ifdef.  Maybe the ifdef could be handled by the script as well.
-    * Another workaround would be to add the script run as a pre-compilation step in the projucer file.  (An option could be added to the script to only run the code-generation step to enable this.)  This would only work in cases where you don't add any new files to the project, but this is a known limitation of Juce development -- if you add files to the project, you have to close your IDE and muck around in the Projucer.  
-        * (Side note: Using this python script as a starting point, it would be easy to create a script to auto-add files to the projucer.)
+    * Another workaround would be to add the script run as a pre-compilation step in the Projucer file.  (An option could be added to the script to only run the code-generation step to enable this.)  This would only work in cases where you don't add any new files to the project, but this is a known limitation of Juce development -- if you add files to the project, you have to close your IDE and muck around in the Projucer.  
+        * (Side note: Using this python script as a starting point, it would be easy to create a script to auto-add files to the Projucer.)
 * Shared audio-processing code in other modules or libraries will have to be handled carefully.  It is likely they would need to be converted to use the same namespaces for audio processing, or at least wrapped with code that uses the SAMPLE_TYPE as the concrete floating point type.  More discovery is needed here.
 
 ### Other Considerations
